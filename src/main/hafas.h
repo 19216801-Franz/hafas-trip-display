@@ -9,7 +9,7 @@
 
 #define HAFAS_URL "http://nah.sh.hafas.de/bin/mgate.exe"
 #define HOME_STATION 9049128
-#define LEGS_COUNT 3
+#define LEGS_COUNT 2
 #define HTTP_OK 200
 #define JSON_BUFFER_SIZE 12000
 

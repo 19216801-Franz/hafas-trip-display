@@ -2,8 +2,6 @@
 
 StaticJsonDocument<JSON_BUFFER_SIZE> buffer;
 leg legs[LEGS_COUNT];
-GxIO_Class spi(SPI, PIN_CS, PIN_DC, PIN_RST);
-GxEPD_Class display(spi, PIN_RST, PIN_BUSY);
 
 void my_panic(){
   for(;;){
@@ -42,48 +40,18 @@ void setup()
   init_time();
 
   
-  Serial.printf("It is the %04i:%02i:%02i at %02i:%02i:%02i o' clock.\n", get_day(), get_month(), get_year(), get_hour(),get_mins(),get_secs());
   
-  Serial.println("fill!");
-
-  display.init(9600);
-  display.fillScreen(GxEPD_WHITE);
-  display.setTextColor(GxEPD_BLACK);
-  display.setRotation(3);
-  display.setCursor(0,30);
-  display.print("HELLO WORLD");
-  display.update();
-  display.setFont(&FONT_SMALL);
-  display.print("--------------------------------------------");
-  display.setFont(&FONT_BIG);
-  display.print("[51] in 01:48");
-  display.setFont(&FONT_MIDDLE);
-  display.print("\n");
-  display.print("-> Kiel Hauptbahnhof");
-  display.setFont(&FONT_SMALL);
-  display.update();
-  display.print("\n");
-  display.print("--------------------------------------------");
-  display.setFont(&FONT_BIG);
-  display.print("\n");
-  display.print("[51] in 01:48");
-  display.setFont(&FONT_MIDDLE);
-  display.print("\n");
-  display.print("-> Kiel Hauptbahnhof");
-  display.setFont(&FONT_SMALL);
-  display.print("\n");
-  display.print("--------------------------------------------");
-  display.update();
-  Serial.println("fill slot done");
-  
-  display.powerDown();
+  init_display();
 }
 
 
 void loop() {
   delay(3000);
+  
+  Serial.printf("\nIt is the %02i:%02i:%04i at %02i:%02i:%02i o' clock.\n", get_day(), get_month(), get_year(), get_hour(),get_mins(),get_secs());
+  
   if(WiFi.status() == WL_CONNECTED){
-      if(update_departures(buffer) == 0){
+      if(update_departures(buffer) != 0){
         Serial.println("No departures!");
         return;
       }
@@ -95,6 +63,11 @@ void loop() {
       print_leg(legs[i]);
       Serial.println();
      }
+
+     erase_display();
+     upper(legs[0]);
+     lower(legs[1]);
+     update_display();
     }
     else {
       Serial.println("Lost Wifi Connection!");

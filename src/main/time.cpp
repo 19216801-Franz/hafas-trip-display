@@ -5,7 +5,9 @@ WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", 2*60*60);
 
 void init_time(){
-  timeClient.update();  
+  // Living in Germany: UTC + 1
+  timeClient.setTimeOffset(60*60);
+  timeClient.update(); 
 }
 
 String format_date(struct tm* t){

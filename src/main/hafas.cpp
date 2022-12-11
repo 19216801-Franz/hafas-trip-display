@@ -65,7 +65,7 @@ int update_departures(StaticJsonDocument<JSON_BUFFER_SIZE> &buffer){
                             + ", \"date\": \"" + String(date_string) + "\", \"dirLoc\": null, \"time\": \"" + String(time_string) + "\", \"maxJny\": " + String(LEGS_COUNT, DEC) + ", \"type\": \"DEP\"" 
                             + ", \"dur\": -1, \"jnyFltrL\": [{\"mode\": \"INC\", \"value\": \"1023\", \"type\": \"PROD\"}]}}], \"auth\": " 
                             + "{\"aid\": \"r0Ot9FLFNAFxijLW\", \"type\": \"AID\"}, \"client\": {\"id\": \"NAHSH\", \"type\": \"IPH\", \"name\": \"NAHSHPROD\", \"v\": \"3000700\"}, \"ver\": \"1.30\"}";           
-    
+
       int response_code = http.POST(request_body);
       
       if (response_code != HTTP_OK){
@@ -131,7 +131,7 @@ void print_leg(leg &l){
 
   String to_print = String("Leg for ") + l.name + String(":\n") + String("From: ") + l.station + String("\nTo: ") 
   + l.direction + String("\nAt: ") + arrival 
-  + (l.has_delay ? String("\nWith delay: ") + delayed_arrival : String("")) 
+  + String("\nAt (delayed): ") + delayed_arrival + String(", Has delay: ") + (l.has_delay ? String("True") : String("False"))
   + String("\nCancelled: ") + cancelled;
   Serial.println(to_print);
 }

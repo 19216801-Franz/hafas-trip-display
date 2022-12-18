@@ -1,7 +1,14 @@
-#include "display.h"
+#include "include/display.h"
 
 GxIO_Class spi(SPI, PIN_CS, PIN_DC, PIN_RST);
 GxEPD_Class display(spi, PIN_RST, PIN_BUSY);
+
+String replace_umlaut(String s){
+  s.replace(String("ä"), String("ae"));
+  s.replace(String("ö"), String("oe"));
+  s.replace(String("ü"), String("ue"));
+  return s;
+}
 
 void erase_display(){  
   display.eraseDisplay();
@@ -12,8 +19,13 @@ void update_display(){
 }
 
 void init_display(){
-  display.init(9600);
+  Serial.println("Initialising display...");
+  display.init();
   display.setTextColor(GxEPD_BLACK);
+  // most e-papers have width < height (portrait) as native orientation, especially the small ones
+  // in GxEPD rotation 0 is used for native orientation (most TFT libraries use 0 fix for portrait orientation)
+  // set rotation to 1 (rotate right 90 degrees) to have enough space on small displays (landscape)
+  //display.setRotation(1);
   //TODO: Wrong
   display.setRotation(3);
 }
@@ -34,13 +46,16 @@ void upper(leg &l){
 
   // Remove 'Bus' from name string
   String name = l.name;
-  if (l.name.indexOf("Bus ") == 0){
-    name = l.name.substring(4);
+  if (name.indexOf("Bus ") == 0){
+    name = name.substring(4);
   }
+  
   String dest = l.direction;
-  if (l.direction.indexOf("Kiel ") == 0){
-    dest = l.direction.substring(5);
+  if (dest.indexOf("Kiel ") == 0){
+    dest = dest.substring(5);
   }
+
+  dest = replace_umlaut(dest);
 
   // In case of no delay, scheduled_arrival == delayed_arrival
   boolean overnight = l.delayed_arrival.tm_mday != get_day();
@@ -103,4 +118,15 @@ void lower(leg &l){
   display.print("--------------------------------------------");
   //TODO: Richtiges Updatewindow finden
   //display.updateWindow(50,50,50,100); 
+}
+
+void print_string(String s)
+{
+  Serial.println("Printing string to display: \"" + s + String("\""));
+  display.setFont(&FONT_MIDDLE);
+  display.fillScreen(GxEPD_WHITE);
+  display.setCursor(0, 18);
+  display.print(s);
+  display.update();
+  display.fillScreen(GxEPD_WHITE);
 }

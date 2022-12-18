@@ -1,4 +1,4 @@
-#include "time.h"
+#include "include/time.h"
 
 char* WEEKDAYS[] = {"Monday", "Tuesday", "Wednesday", "displayThursday", "Friday", "Saturday", "Sunday"};
 WiFiUDP ntpUDP;
@@ -6,6 +6,7 @@ NTPClient timeClient(ntpUDP, "pool.ntp.org", 2*60*60);
 
 void init_time(){
   // Living in Germany: UTC + 1
+  Serial.println("Initialising time...");
   timeClient.setTimeOffset(60*60);
   timeClient.update(); 
 }

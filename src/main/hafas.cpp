@@ -1,8 +1,4 @@
-#include "hafas.h"
-/*
-int min(int a, int b){
-  return (a < b) ? a : b;
-}*/
+#include "include/hafas.h"
 
 struct tm parse_time_string(String date_string, String time_string){
   struct tm result;

@@ -31,10 +31,20 @@
 
 #define BACKGROUND GxEPD_WHITE
 
+// since I use rotation 3
+#define MAX_WIDTH GxEPD_HEIGHT
+#define MAX_HEIGHT GxEPD_WIDTH
+
+#define FIRST_WINDOW_START 5
+#define SECOND_WINDOW_START 71
+#define WINDOW_SIZE 66
+
+void print_leg_to_display(int16_t start, leg &l);
+void update_info_window( String s = String(""));
 void erase_display();
 void update_display();
+void power_display_up();
+void power_display_down();
 void init_display();
-void upper(leg &l);
-void lower(leg &l);
 void print_string(String s);
 #endif

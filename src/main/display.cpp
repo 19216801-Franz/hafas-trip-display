@@ -11,22 +11,28 @@ String replace_umlaut(String s){
 }
 
 void erase_display(){  
-  display.eraseDisplay();
+  //TODO:
+  //display.eraseDisplay();
+  display.fillScreen(GxEPD_WHITE);
 }
 
 void update_display(){
   display.update();
 }
 
+void power_display_up(){
+  display.init();
+}
+
+void power_display_down(){
+  display.powerDown();
+}
+
 void init_display(){
   Serial.println("Initialising display...");
-  display.init();
+  power_display_up();
   display.setTextColor(GxEPD_BLACK);
-  // most e-papers have width < height (portrait) as native orientation, especially the small ones
-  // in GxEPD rotation 0 is used for native orientation (most TFT libraries use 0 fix for portrait orientation)
-  // set rotation to 1 (rotate right 90 degrees) to have enough space on small displays (landscape)
-  //display.setRotation(1);
-  //TODO: Wrong
+  // rotation 3 (rotate right 90 degrees 3 times) for reversed landscape
   display.setRotation(3);
 }
 
@@ -36,10 +42,11 @@ void print_red(String s){
   display.setTextColor(GxEPD_BLACK);
 }
 
-void upper(leg &l){
+void print_leg_to_display(int16_t start, leg &l){
+  Serial.printf("Printing leg at %i", start);
   char arrival[6];
   display.setFont(&FONT_SMALL);
-  display.setCursor(0,5);
+  display.setCursor(0,start);
   display.print("--------------------------------------------");
   display.setCursor(0, display.getCursorY() + 28);
   display.setFont(&FONT_BIG);
@@ -50,12 +57,12 @@ void upper(leg &l){
     name = name.substring(4);
   }
   
-  String dest = l.direction;
-  if (dest.indexOf("Kiel ") == 0){
-    dest = dest.substring(5);
+  String direction = l.direction;
+  if ((direction.length() > (FONT_MIDDLE_MAX_CHARS - 3)) && (direction.indexOf("Kiel ") == 0)){
+    direction = direction.substring(5);
   }
 
-  dest = replace_umlaut(dest);
+  direction = replace_umlaut(direction);
 
   // In case of no delay, scheduled_arrival == delayed_arrival
   boolean overnight = l.delayed_arrival.tm_mday != get_day();
@@ -63,8 +70,6 @@ void upper(leg &l){
   int mins = l.delayed_arrival.tm_min;
   sprintf(arrival, "%02i:%02i", hours, mins);
 
-  //Serial.printf("Printing: name %s\ndest %s\nhours %i\nmins %i\novernight %s\n", name, dest, hours, mins, overnight);
-  
   print_red("["); display.print(name); print_red("]"); display.print(" at ");
   if (l.has_delay){
     print_red(arrival);
@@ -73,51 +78,30 @@ void upper(leg &l){
   }
   display.setFont(&FONT_MIDDLE);
   display.print("\n");
-  display.print(String("-> ") + dest);
+
+  // abbreaveating too long direction strings.
+  if (direction.length() > (FONT_MIDDLE_MAX_CHARS - 3)){
+    direction = direction.substring(0, FONT_MIDDLE_MAX_CHARS - 3);
+     direction.setCharAt(direction.length() - 1, '.');
+  }
+  display.print(String("-> ") + direction);
   display.setFont(&FONT_SMALL);
   display.print("\n");
   display.print("--------------------------------------------");
-  //TODO: Richtiges Updatewindow finden
-  //display.updateWindow(50,50,50,100); 
+  display.updateWindow(0, start, MAX_WIDTH, WINDOW_SIZE);
 }
 
-void lower(leg &l){
-  char arrival[6];
-  display.setCursor(0, display.getCursorY() + 28);
-  display.setFont(&FONT_BIG);
-
-  // Remove 'Bus' from name string
-  String name = l.name;
-  if (l.name.indexOf("Bus ") == 0){
-    name = l.name.substring(4);
-  }
-  String dest = l.direction;
-  if (l.direction.indexOf("Kiel ") == 0){
-    dest = l.direction.substring(5);
-  }
-
-  // In case of no delay, scheduled_arrival == delayed_arrival
-  boolean overnight = l.delayed_arrival.tm_mday != get_day();
-  int hours = l.delayed_arrival.tm_hour;
-  int mins = l.delayed_arrival.tm_min;
-  sprintf(arrival, "%02i:%02i", hours, mins);
-
-  //Serial.printf("Printing: name %s\ndest %s\nhours %i\nmins %i\novernight %s\n", name, dest, hours, mins, overnight);
-  
-  print_red("["); display.print(name); print_red("]"); display.print(" at ");
-  if (l.has_delay){
-    print_red(arrival);
-  } else {
-    display.print(arrival);
-  }
-  display.setFont(&FONT_MIDDLE);
-  display.print("\n");
-  display.print(String("-> ") + dest);
+void update_info_window(String s){
+  Serial.println("Updating info window");
+  display.setCursor(0, SECOND_WINDOW_START + WINDOW_SIZE + 8);
   display.setFont(&FONT_SMALL);
-  display.print("\n");
-  display.print("--------------------------------------------");
-  //TODO: Richtiges Updatewindow finden
-  //display.updateWindow(50,50,50,100); 
+  if (s.equals("")){
+    display.print(get_pretty_date());
+    display.print("\nUptime: " + get_passed_time());
+  } else {
+    display.print(s);
+  }
+  display.updateWindow(0, SECOND_WINDOW_START + WINDOW_SIZE, MAX_WIDTH, MAX_HEIGHT - (SECOND_WINDOW_START + WINDOW_SIZE));
 }
 
 void print_string(String s)

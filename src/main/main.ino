@@ -66,10 +66,10 @@ bool connect_saved_wifi(){
   return connect_wifi(get_saved_ssid(), get_saved_pw());
 }
 
-void change_wifi_pw(){
-  print_string("Couldn't Connect to saved Wifi with ssid:\n" + get_saved_ssid() + "\nAnd pw:\n" + get_saved_pw());
+void reset_wifi(){
+  print_string("Couldn't connect\nto wifi\n" + get_saved_ssid() + "\nwith pw:\n" + get_saved_pw());
   delay(SECOND*3);
-  print_string("To reset saved wifi, please create a temporal hotspot with name:\n" + String(TEMP_SSID) + "\nand password:\n" + String(TEMP_PW));
+  print_string("To reset saved wifi,\nplease create a hotspot with name:\n" + String(TEMP_SSID) + "\nand password:\n" + String(TEMP_PW));
 
   for(;;){
       if (connect_wifi(String(TEMP_SSID), String(TEMP_PW))){
@@ -105,14 +105,15 @@ void change_wifi_pw(){
 
   server.on("/", [&server, &ssid, &pw]() {
     server.send(200, "text/plain", String("Hello from ESP8266!\n")
-    + String("To set the wifi login data, run the following command in a command shell, inserting your ssid and password.\nOn Windows, you con use cmd.exe, on Linux, use a Terminal.")
+    + String("To set the wifi login data, run the following command in a command shell, inserting your ssid and password.\nOn Windows, you can use cmd.exe.")
     + String("\n\n[WINDOWS]: curl http://" + WiFi.localIP().toString() + "/setup/ -X POST -d \"{\\\"ssid\\\": \\\"enter your ssid here\\\", \\\"password\\\" : \\\"enter your password here\\\"}\"")
     + String("\n\n[LINUX]: curl http://" + WiFi.localIP().toString() + "/setup/ -X POST -d '{\"ssid\": \"enter your ssid here\", \"password\" : \"enter your password here\"}'")
     + String("\n\nSSID currently set to: '" + ssid + String("'\nPW currently set to: '") + pw + String("'")));
   });
 
   print_string(
-    String("Join your hotspot with a laptop, and open following url in a browser:\n") +
+    //String malformed to fit screen perfectly
+    String("Join your hotspot witha laptop, and open\nfollowing url in\na browser:\n") +
     String("http://" + WiFi.localIP().toString() + "/")
   );
 
@@ -135,9 +136,8 @@ void init_wifi(){
   WiFi.setAutoReconnect(true);
   WiFi.persistent(true);
 
-  //TODO: remove true
-  while (true || !connect_saved_wifi()){
-    change_wifi_pw();
+  while (!connect_saved_wifi()){
+    reset_wifi();
   }
 }
 
@@ -152,30 +152,44 @@ void setup()
 }
 
 void loop() {
-  delay(3000);
+  /*TODO: Final test: Set wrong saved password,
+  restart, set correct password and let the microcontroller restart a couple times
+  save_ssid("WRONG SSID");
+  save_pw("WRONG PW");
+  */
+
+  if(WiFi.status() != WL_CONNECTED){
+    //TODO: handle connection loss
+    Serial.println("Lost Wifi Connection! Initialising wifi again.");
+    init_wifi();
+  }
+
   
-  Serial.printf("\nIt is the %02i:%02i:%04i at %02i:%02i:%02i o' clock.\n", get_day(), get_month(), get_year(), get_hour(),get_mins(),get_secs());
-  
-  if(WiFi.status() == WL_CONNECTED){
-      if(update_departures(buffer) != 0){
-        Serial.println("No departures!");
-        return;
-      }
+  if(update_departures(buffer) != 0){
+    Serial.println("Couldn't update departures!");
+    power_display_up();
+    update_info_window("[Error] Couldn't update departures!");
+    power_display_down();
+    return;
+  }
 
-     parse_legs(buffer, legs);
+  int need_refresh = parse_legs(buffer, legs);
+  Serial.printf("Do I need a refresh? %i\n", need_refresh);
 
-     Serial.println("\n\n\nParsed legs\n\n:");
-     for( int i = 0; i < LEGS_COUNT; ++i){
-      print_leg(legs[i]);
-      Serial.println();
-     }
+  Serial.println("\nParsed legs:");
+  for( int i = 0; i < LEGS_COUNT; ++i){
+    print_leg(legs[i]);
+    Serial.println();
+  }
 
-     erase_display();
-     upper(legs[0]);
-     lower(legs[1]);
-     update_display();
-    }
-    else {
-      Serial.println("Lost Wifi Connection!");
-    }
+  if (need_refresh){
+    power_display_up();
+    erase_display();
+    print_leg_to_display(FIRST_WINDOW_START, legs[0]);
+    print_leg_to_display(SECOND_WINDOW_START, legs[1]);
+    update_info_window();
+    power_display_down();
+  }
+
+  delay(SECOND * 60);
 }

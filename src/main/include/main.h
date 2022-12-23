@@ -18,7 +18,7 @@
 #define MY_PW "temp-password" //"all_packages_here_pls"
 #define TEMP_SSID "temp-hotspot" //Doesnt work on apple
 #define TEMP_PW "temp-password"
-#define CONNECTION_RETRIES 60
+#define CONNECTION_RETRIES 30
 #define SECOND 1000
 
 typedef struct {

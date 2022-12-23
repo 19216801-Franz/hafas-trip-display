@@ -25,7 +25,7 @@ typedef struct leg{
   } leg;
 
 void print_leg(leg &l);
-void parse_legs(StaticJsonDocument<JSON_BUFFER_SIZE> &buffer, leg (&legs)[LEGS_COUNT]);
+int parse_legs(StaticJsonDocument<JSON_BUFFER_SIZE> &buffer, leg (&legs)[LEGS_COUNT]);
 int update_departures(StaticJsonDocument<JSON_BUFFER_SIZE> &buffer);
 
 #endif
